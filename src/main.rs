@@ -171,8 +171,13 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                 }
 
                 if key.code == event::KeyCode::Backspace {
+                   if input_writing.chars().nth(check) == typing.chars().nth(check) {
+                        count -=1;
+                    }
+
                     input_writing.pop();
-                    count -=1;
+                    
+                    
                 }
                 if key.code == event::KeyCode::Esc {
                     break;
