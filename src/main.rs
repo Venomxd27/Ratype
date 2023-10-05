@@ -17,6 +17,8 @@ use std::error::Error;
 use std::io::{self, Stdout};
 use std::time::{Duration, SystemTime};
 
+mod utils;
+use utils::{get_accuracy, get_wpm};
 // #[warn(unused_variables)]
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -47,46 +49,48 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
     let words = 20;
     let mut typing: String = rand_word::new(words);
     let mut input_writing = String::new();
-    let mut count = 0;
-    let mut check = 0;
+    // let mut count = 0;
+    // let mut check = 0;
     let mut start: Option<SystemTime> = None;
     let mut end: Option<u64> = None;
     Ok(loop {
         terminal.draw(|frame| {
-            
-
             //    time vala variable and wpm wala yaha pe declare karna
 
             if typing.len() == input_writing.len() {
-                          let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints(
-                    [
-                        Constraint::Percentage(10),
-                        Constraint::Min(1),
-                        Constraint::Percentage(90),
-                    ]
-                    .as_ref(),
-                )
-                .split(frame.size());
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints(
+                        [
+                            Constraint::Percentage(10),
+                            Constraint::Min(1),
+                            Constraint::Percentage(90),
+                        ]
+                        .as_ref(),
+                    )
+                    .split(frame.size());
                 if end.is_none() {
                     end = match start.unwrap().elapsed() {
-                        Ok(elapsed) =>Some( elapsed.as_secs()),
+                        Ok(elapsed) => Some(elapsed.as_secs()),
                         Err(_) => Some(0),
                     };
                 }
 
-                let better_luck = Paragraph::new("Try faster next time").alignment(Alignment ::Center);
-              // let block = Block::default().title("OP").borders(Borders::ALL);
+                let better_luck =
+                    Paragraph::new("Try faster next time").alignment(Alignment::Center);
+                // let block = Block::default().title("OP").borders(Borders::ALL);
                 frame.render_widget(better_luck, chunks[0]);
 
                 let block = Paragraph::new(vec![
                     Line::from(format!(
                         "Accuracy {:.2}",
-                        (count as f32 / typing.len() as f32) * 100.0
+                        get_accuracy(&typing, &input_writing)
                     )),
-                    Line::from(format!("WPM {}", (words as f32 / end.unwrap() as f32) * 60.0)),
+                    Line::from(format!(
+                        "WPM {}",
+                        (words as f32 / end.unwrap() as f32) * 60.0
+                    )),
                     Line::from(format!(" ")),
                     Line::from(format!(" ")),
                     Line::from("Keybindings : "),
@@ -97,18 +101,18 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                 .block(Block::default().title("Result").borders(Borders::ALL));
                 frame.render_widget(block, chunks[2]);
             } else {
-                            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints(
-                    [
-                        Constraint::Percentage(10),
-                        Constraint::Min(2),
-                        Constraint::Percentage(90),
-                    ]
-                    .as_ref(),
-                )
-                .split(frame.size());
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints(
+                        [
+                            Constraint::Percentage(10),
+                            Constraint::Min(2),
+                            Constraint::Percentage(90),
+                        ]
+                        .as_ref(),
+                    )
+                    .split(frame.size());
                 let mut goal = Vec::new();
                 let typing_vec = typing.chars().collect::<Vec<char>>();
 
@@ -118,10 +122,10 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                     } else {
                         Color::Red
                     };
-                  //  let block =Paragraph::new("Welcome to cockroachtype!!!!!!"). Block::default().title("Hello").borders(Borders::ALL).alignment(Alignment::Center);
-                   // frame.render_widget(block, chunks[0]);
-                   // let block = Block::default().title("Hello").borders(Borders::ALL);
-                   // frame.render_widget(block, chunks[0]);
+                    //  let block =Paragraph::new("Welcome to cockroachtype!!!!!!"). Block::default().title("Hello").borders(Borders::ALL).alignment(Alignment::Center);
+                    // frame.render_widget(block, chunks[0]);
+                    // let block = Block::default().title("Hello").borders(Borders::ALL);
+                    // frame.render_widget(block, chunks[0]);
 
                     goal.push(Span::styled(
                         if typing_vec[i] != ' ' {
@@ -140,7 +144,37 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                     ))
                 }
 
-                let block =Paragraph::new("WELCOME TO COCKROACHTYPE!!!!").alignment(Alignment::Center);
+                // let block =
+                // Paragraph::new("WELCOME TO COCKROACHTYPE!!!!").alignment(Alignment::Center);
+
+                let block = Paragraph::new(vec![
+
+                Line::from(format!(
+                "Accuracy : {:.2} ", get_accuracy(&typing , & input_writing)
+            )),
+
+                    Line::from( "  "),
+
+                        Line::from(format!("WPM: {:.2}" ,  if start.is_some() {
+                        get_wpm(start.unwrap(), &input_writing)
+                    } else {
+                        0f64
+                    }
+                            )
+
+
+
+                        
+)
+                    // format!(
+                    // "Accuracy: {:.2} | WPM: {:.2}",
+                    // get_accuracy(&typing, &input_writing),
+                    // if start.is_some() {
+                    //     get_wpm(start.unwrap(), &input_writing)
+                    // } else {
+                    //     0f64
+                    // }
+                ]).alignment(Alignment::Center);
                 frame.render_widget(block, chunks[0]);
 
                 let block = Paragraph::new(Line::from(goal))
@@ -152,18 +186,18 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
 
         if event::poll(Duration::from_millis(250))? {
             if let event::Event::Key(key) = event::read()? {
-                if event::KeyCode::Char('q') == key.code {
+                if event::KeyCode::Char('1') == key.code {
                     break;
                 }
                 if let event::KeyCode::Char(ch) = key.code {
                     if input_writing.len() < typing.len() {
                         input_writing.push(ch);
-                        if Some(ch) == typing.chars().nth(check) {
-                            count += 1;
-                        }
-                        if check < typing.len() - 1 {
-                            check += 1;
-                        }
+                        // if ch == typing.chars().nth(check).unwrap() {
+                        //     count += 1;
+                        // }
+                        // if check < typing.len() - 1 {
+                        //     check += 1;
+                        // }
                         if input_writing.len() == 1 {
                             start = Some(SystemTime::now());
                         }
@@ -171,13 +205,14 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                 }
 
                 if key.code == event::KeyCode::Backspace {
-                   if input_writing.chars().nth(check) == typing.chars().nth(check) {
-                        count -=1;
-                    }
+                    // if input_writing.chars().nth(check) == typing.chars().nth(check) {
+                    //     count -= 1;
+                    // }
 
-                    input_writing.pop();
-                    
-                    
+                    if !input_writing.is_empty() {
+                        input_writing.pop();
+                    }
+                    // check -= 1;
                 }
                 if key.code == event::KeyCode::Esc {
                     break;
@@ -188,11 +223,13 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                     while typing.contains("º") {
                         typing = rand_word::new(words);
                     }
-                    count = 0;
+                    // count = 0;
+                    // check = 0;
                 }
                 if key.code == event::KeyCode::Enter {
                     input_writing = "".to_string();
-                    count = 0;
+                    // count = 0;
+                    // check = 0;
                 }
             }
         }
