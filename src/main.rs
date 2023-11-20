@@ -19,7 +19,6 @@ use std::time::{Duration, SystemTime};
 
 mod utils;
 use utils::{get_accuracy, get_wpm};
-// #[warn(unused_variables)]
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = setup_terminal()?;
@@ -101,6 +100,7 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                 .block(Block::default().title("Result").borders(Borders::ALL));
                 frame.render_widget(block, chunks[2]);
             } else {
+
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
@@ -143,38 +143,34 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                         Style::default().fg(Color::DarkGray),
                     ))
                 }
+                
 
                 // let block =
                 // Paragraph::new("WELCOME TO COCKROACHTYPE!!!!").alignment(Alignment::Center);
 
                 let block = Paragraph::new(vec![
-
-                Line::from(format!(
-                "Accuracy : {:.2} ", get_accuracy(&typing , & input_writing)
-            )),
-
-                    Line::from( "  "),
-
-                        Line::from(format!("WPM: {:.2}" ,  if start.is_some() {
-                        get_wpm(start.unwrap(), &input_writing)
-                    } else {
-                        0f64
-                    }
-                            )
-
-
-
-                        
-)
-                    // format!(
-                    // "Accuracy: {:.2} | WPM: {:.2}",
-                    // get_accuracy(&typing, &input_writing),
-                    // if start.is_some() {
-                    //     get_wpm(start.unwrap(), &input_writing)
-                    // } else {
-                    //     0f64
-                    // }
-                ]).alignment(Alignment::Center);
+                    Line::from(format!(
+                        "Accuracy : {:.2} ",
+                        get_accuracy(&typing, &input_writing)
+                    )),
+                    //                    Line::from( "  "),
+                    Line::from(format!(
+                        "WPM: {:.2}",
+                        if start.is_some() {
+                            get_wpm(start.unwrap(), &input_writing)
+                        } else {
+                            0f64
+                        }
+                    )), // format!(
+                        // "Accuracy: {:.2} | WPM: {:.2}",
+                        // get_accuracy(&typing, &input_writing),
+                        // if start.is_some() {
+                        //     get_wpm(start.unwrap(), &input_writing)
+                        // } else {
+                        //     0f64
+                        // }
+                ])
+                .alignment(Alignment::Center);
                 frame.render_widget(block, chunks[0]);
 
                 let block = Paragraph::new(Line::from(goal))
@@ -219,17 +215,29 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<(), Box<dyn 
                 }
                 if key.code == event::KeyCode::Tab {
                     input_writing = "".to_string();
+                    
+                        end = None;
+                    
+
                     typing = rand_word::new(words);
                     while typing.contains("º") {
                         typing = rand_word::new(words);
                     }
                     // count = 0;
                     // check = 0;
+
+                    start = Some(SystemTime::now());
                 }
                 if key.code == event::KeyCode::Enter {
                     input_writing = "".to_string();
+                    
+                        end = None;
+                    
+                    
                     // count = 0;
                     // check = 0;
+
+                
                 }
             }
         }
